@@ -14,10 +14,10 @@
 #include "fftWithHopSizeAndHannWindowProcessor.h"
 
 
-class MyProcessor : public FftWithHopSizeAndHannWindowProcessor<11>
+class MyProcessor : public FftWithHopSizeAndHannWindowProcessor
 {
 public:
-    MyProcessor() : FftWithHopSizeAndHannWindowProcessor ()
+    MyProcessor () : FftWithHopSizeAndHannWindowProcessor (11)
     {}
     ~MyProcessor() {}
 
@@ -25,14 +25,14 @@ private:
     void processFrameInBuffer() override
     {
         for (int ch = 0; ch < 2; ++ch)
-            fft.performRealOnlyForwardTransform(fftInOutBuffer.getWritePointer(ch), true);
+            fft.performRealOnlyForwardTransform (fftInOutBuffer.getWritePointer(ch), true);
+//
+//        // clear high frequency content
+//        for (int ch = 0; ch < 2; ++ch)
+//            FloatVectorOperations::clear(fftInOutBuffer.getWritePointer(ch, fftSize / 2), fftSize / 2);
 
-        // clear high frequency content
         for (int ch = 0; ch < 2; ++ch)
-            FloatVectorOperations::clear(fftInOutBuffer.getWritePointer(ch, fftSize / 2), fftSize / 2);
-
-        for (int ch = 0; ch < 2; ++ch)
-            fft.performRealOnlyInverseTransform(fftInOutBuffer.getWritePointer(ch));
+            fft.performRealOnlyInverseTransform (fftInOutBuffer.getWritePointer(ch));
     }
 };
 

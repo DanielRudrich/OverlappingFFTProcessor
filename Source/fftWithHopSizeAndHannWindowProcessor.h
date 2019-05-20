@@ -29,21 +29,20 @@
  class MyProcessor : public FftWithHopSizeAndHannWindowProcessor<11>
  {
  public:
-    MyProcessor() : FftWithHopSizeAndHannWindowProcessor ()
-    {}
+    MyProcessor() : FftWithHopSizeAndHannWindowProcessor() {}
 
  private:
     void processFrameInBuffer() override
     {
         for (int ch = 0; ch < 2; ++ch)
-            fft.performRealOnlyForwardTransform(fftInOutBuffer.getWritePointer(ch), true);
+            fft.performRealOnlyForwardTransform (fftInOutBuffer.getWritePointer (ch), true);
 
         // clear high frequency content
         for (int ch = 0; ch < 2; ++ch)
-            FloatVectorOperations::clear(fftInOutBuffer.getWritePointer(ch, fftSize / 2), fftSize / 2);
+            FloatVectorOperations::clear (fftInOutBuffer.getWritePointer (ch, fftSize / 2), fftSize / 2);
 
         for (int ch = 0; ch < 2; ++ch)
-            fft.performRealOnlyInverseTransform(fftInOutBuffer.getWritePointer(ch));
+            fft.performRealOnlyInverseTransform (fftInOutBuffer.getWritePointer (ch));
     }
  };
 
@@ -54,39 +53,43 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 
 using namespace dsp;
-template <int fftPowerOf2>
 class FftWithHopSizeAndHannWindowProcessor : public ProcessorBase
 {
 public:
-    FftWithHopSizeAndHannWindowProcessor()
-    : fft(fftPowerOf2)
+    FftWithHopSizeAndHannWindowProcessor (const int fftSizeAsPowerOf2, const int hopSizeDividerAsPowerOf2 = 4)
+    : fft (fftSizeAsPowerOf2), fftSize (1 << fftSizeAsPowerOf2), hopSize (fftSize >> hopSizeDividerAsPowerOf2)
     {
+        // make sure you have at least an overlap of 50%
+        jassert (hopSizeDividerAsPowerOf2 > 0);
+
+        // make sure you don't want to hop smaller than 1 sample
+        jassert (hopSizeDividerAsPowerOf2 <= fftSizeAsPowerOf2);
+
         // create Hann window
-        hannWindow.resize(fftSize);
-        WindowingFunction<float>::fillWindowingTables (hannWindow.getRawDataPointer(), fftSize, WindowingFunction<float>::WindowingMethod::hann, false);
-        
-        reset();
+        hannWindow.resize (fftSize);
+        WindowingFunction<float>::fillWindowingTables (hannWindow.data(), fftSize, WindowingFunction<float>::WindowingMethod::hann, false);
+
+        const float hopSizeCompensateFactor = 1.0f / (1 << (hopSizeDividerAsPowerOf2 - 1));
+        for (auto& elem : hannWindow)
+            elem *= hopSizeCompensateFactor;
     }
     
     ~FftWithHopSizeAndHannWindowProcessor() {}
 
-    void reset() override
-    {
-        notYetUsedAudioDataCount = 0;
-    }
+    void reset() override {}
 
     void prepare (const ProcessSpec &spec) override
     {
         const int nCh = spec.numChannels;
         const int bufferSize = spec.maximumBlockSize;
 
-        notYetUsedAudioData.setSize(nCh, fftSize - 1);
-        fftInOutBuffer.setSize(nCh, 2 * fftSize);
+        notYetUsedAudioData.setSize (nCh, fftSize - 1);
+        fftInOutBuffer.setSize (nCh, 2 * fftSize);
 
-        const int k = floor(1.0f + ((float) (bufferSize - 1)) / hopSize);
-        const int M = k * hopSize + hopSize;
+        const int k = floor (1.0f + ((float) (bufferSize - 1)) / hopSize);
+        const int M = k * hopSize + (fftSize - hopSize);
 
-        outputBuffer.setSize(nCh, M + bufferSize - 1); // not sure if (bufferSize - 1) could be too much, but it's working like a charm... so.. whatever...
+        outputBuffer.setSize (nCh, M + bufferSize - 1); // not sure if (bufferSize - 1) could be too much, but it's working like a charm... so.. whatever...
         outputBuffer.clear();
 
         int offset = 0;
@@ -97,7 +100,7 @@ public:
 
         outputOffset = fftSize - 1;
 
-        reset();
+        notYetUsedAudioDataCount = 0;
     }
 
     void process (const ProcessContextReplacing<float> &context) override
@@ -110,28 +113,30 @@ public:
     {
         AudioBlock<float> inputBlock = context.getInputBlock();
         AudioBlock<float> outputBlock = context.getOutputBlock();
-        const int L = (int) inputBlock.getNumSamples();
-        const int nChannels = (int) inputBlock.getNumChannels();
+        const auto L = (int) inputBlock.getNumSamples();
+        const auto nChannels = (int) inputBlock.getNumChannels();
         const int initialNotYetUsedAudioDataCount = notYetUsedAudioDataCount;
         int notYetUsedAudioDataOffset = 0;
         int usedSamples = 0;
 
+
+        // we've got some left overs, so let's use them together with the new samples
         while (notYetUsedAudioDataCount > 0 && notYetUsedAudioDataCount + L >= fftSize)
         {
             // copy not yet used data into fftInOut buffer (with hann windowing)
             for (int ch = 0; ch < nChannels; ++ch)
             {
-                FloatVectorOperations::multiply(fftInOutBuffer.getWritePointer(ch), // destination
-                                                notYetUsedAudioData.getReadPointer(ch, notYetUsedAudioDataOffset), // source 1 (audio data)
-                                                hannWindow.getRawDataPointer(), // source 2 (window)
-                                                notYetUsedAudioDataCount // number of samples
+                FloatVectorOperations::multiply (fftInOutBuffer.getWritePointer (ch), // destination
+                                                 notYetUsedAudioData.getReadPointer (ch, notYetUsedAudioDataOffset), // source 1 (audio data)
+                                                 hannWindow.data(), // source 2 (window)
+                                                 notYetUsedAudioDataCount // number of samples
                                                 );
 
                 // fill up fftInOut buffer with new data (with hann windowing)
-                FloatVectorOperations::multiply(fftInOutBuffer.getWritePointer(ch, notYetUsedAudioDataCount), // destination
-                                                inputBlock.getChannelPointer(ch), // source 1 (audio data)
-                                                hannWindow.getRawDataPointer() + notYetUsedAudioDataCount, // source 2 (window)
-                                                fftSize - notYetUsedAudioDataCount // number of samples
+                FloatVectorOperations::multiply (fftInOutBuffer.getWritePointer (ch, notYetUsedAudioDataCount), // destination
+                                                 inputBlock.getChannelPointer (ch), // source 1 (audio data)
+                                                 hannWindow.data() + notYetUsedAudioDataCount, // source 2 (window)
+                                                 fftSize - notYetUsedAudioDataCount // number of samples
                                                 );
             }
 
@@ -146,12 +151,12 @@ public:
         {
             for (int ch = 0; ch < nChannels; ++ch)
             {
-                FloatVectorOperations::copy(notYetUsedAudioData.getWritePointer(ch),
-                                            notYetUsedAudioData.getReadPointer(ch, initialNotYetUsedAudioDataCount - notYetUsedAudioDataCount),
-                                            notYetUsedAudioDataCount);
-                FloatVectorOperations::copy(notYetUsedAudioData.getWritePointer(ch, notYetUsedAudioDataCount),
-                                            inputBlock.getChannelPointer(ch) + usedSamples,
-                                            L);
+                FloatVectorOperations::copy (notYetUsedAudioData.getWritePointer (ch),
+                                             notYetUsedAudioData.getReadPointer (ch, initialNotYetUsedAudioDataCount - notYetUsedAudioDataCount),
+                                             notYetUsedAudioDataCount);
+                FloatVectorOperations::copy (notYetUsedAudioData.getWritePointer (ch, notYetUsedAudioDataCount),
+                                             inputBlock.getChannelPointer (ch) + usedSamples,
+                                             L);
             }
             notYetUsedAudioDataCount += L;
         }
@@ -163,9 +168,9 @@ public:
             {
                 for (int ch = 0; ch < nChannels; ++ch)
                 {
-                    FloatVectorOperations::multiply(fftInOutBuffer.getWritePointer(ch),
-                                                    inputBlock.getChannelPointer(ch) + dataOffset,
-                                                    hannWindow.getRawDataPointer(), fftSize);
+                    FloatVectorOperations::multiply (fftInOutBuffer.getWritePointer (ch),
+                                                     inputBlock.getChannelPointer (ch) + dataOffset,
+                                                     hannWindow.data(), fftSize);
                 }
                 processAndBufferOutput();
 
@@ -177,9 +182,9 @@ public:
             {
                 for (int ch = 0; ch < nChannels; ++ch)
                 {
-                    FloatVectorOperations::copy(notYetUsedAudioData.getWritePointer(ch),
-                                                inputBlock.getChannelPointer(ch) + dataOffset,
-                                                L - dataOffset);
+                    FloatVectorOperations::copy (notYetUsedAudioData.getWritePointer (ch),
+                                                 inputBlock.getChannelPointer (ch) + dataOffset,
+                                                 L - dataOffset);
                 }
             }
             notYetUsedAudioDataCount = remainingSamples;
@@ -187,9 +192,9 @@ public:
 
 
         // return processed samples from outputBuffer
-        const int nChOut = (int) outputBlock.getNumChannels();
+        const auto nChOut = (int) outputBlock.getNumChannels();
         const int shiftStart = L;
-        int shiftL = outputOffset + hopSize - L;
+        int shiftL = outputOffset + fftSize - hopSize - L;
 
         const int tooMuch = shiftStart + shiftL - outputBuffer.getNumSamples();
         if (tooMuch > 0)
@@ -199,8 +204,8 @@ public:
 
         for (int ch = 0; ch < nChOut; ++ch)
         {
-            FloatVectorOperations::copy(outputBlock.getChannelPointer(ch), outputBuffer.getReadPointer(ch), L);
-            FloatVectorOperations::copy(outputBuffer.getWritePointer(ch), outputBuffer.getReadPointer(ch, shiftStart), shiftL);
+            FloatVectorOperations::copy (outputBlock.getChannelPointer (ch), outputBuffer.getReadPointer (ch), L);
+            FloatVectorOperations::copy (outputBuffer.getWritePointer (ch), outputBuffer.getReadPointer (ch, shiftStart), shiftL);
         }
         outputOffset -= L;
     }
@@ -222,26 +227,26 @@ private:
         const int nCh = outputBuffer.getNumChannels();
         for (int ch = 0; ch < nCh; ++ch)
         {
-            outputBuffer.addFrom(ch, outputOffset, fftInOutBuffer, ch, 0, hopSize);
-            outputBuffer.copyFrom(ch, outputOffset + hopSize, fftInOutBuffer, ch, hopSize, hopSize);
+            outputBuffer.addFrom (ch, outputOffset, fftInOutBuffer, ch, 0, fftSize - hopSize);
+            outputBuffer.copyFrom (ch, outputOffset + fftSize - hopSize, fftInOutBuffer, ch, fftSize - hopSize, hopSize);
         }
         outputOffset += hopSize;
     }
 
-public:
+protected:
     dsp::FFT fft;
     AudioBuffer<float> fftInOutBuffer;
-    const int fftSize = 1 << fftPowerOf2;
-    const int hopSize = fftSize / 2;
+    const int fftSize;
+    const int hopSize;
 
 private:
-    Array<float> hannWindow;
+    std::vector<float> hannWindow;
 
     AudioBuffer<float> notYetUsedAudioData;
     AudioBuffer<float> outputBuffer;
     int outputOffset;
 
-    int notYetUsedAudioDataCount;
+    int notYetUsedAudioDataCount = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FftWithHopSizeAndHannWindowProcessor)
 };
