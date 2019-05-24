@@ -11,40 +11,40 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "fftWithHopSizeAndHannWindowProcessor.h"
+#include "OverlappingFFTProcessor.h"
 
 
-class MyProcessor : public FftWithHopSizeAndHannWindowProcessor
+class MyProcessor : public OverlappingFFTProcessor
 {
 public:
-    MyProcessor () : FftWithHopSizeAndHannWindowProcessor (11)
+    MyProcessor () : OverlappingFFTProcessor (11, 2)
     {}
     ~MyProcessor() {}
 
 private:
-    void processFrameInBuffer() override
+    void processFrameInBuffer (const int maxNumChannels) override
     {
-        for (int ch = 0; ch < 2; ++ch)
-            fft.performRealOnlyForwardTransform (fftInOutBuffer.getWritePointer(ch), true);
-//
-//        // clear high frequency content
-//        for (int ch = 0; ch < 2; ++ch)
-//            FloatVectorOperations::clear(fftInOutBuffer.getWritePointer(ch, fftSize / 2), fftSize / 2);
+        for (int ch = 0; ch < maxNumChannels; ++ch)
+            fft.performRealOnlyForwardTransform (fftInOutBuffer.getWritePointer (ch), true);
 
-        for (int ch = 0; ch < 2; ++ch)
-            fft.performRealOnlyInverseTransform (fftInOutBuffer.getWritePointer(ch));
+        // clear high frequency content
+        for (int ch = 0; ch < maxNumChannels; ++ch)
+            FloatVectorOperations::clear (fftInOutBuffer.getWritePointer (ch, fftSize / 2), fftSize / 2);
+
+        for (int ch = 0; ch < maxNumChannels; ++ch)
+            fft.performRealOnlyInverseTransform (fftInOutBuffer.getWritePointer (ch));
     }
 };
 
 //==============================================================================
 /**
 */
-class FfthopProcesingAudioProcessor  : public AudioProcessor
+class OverlappingFFTProcessorDemoAudioProcessor  : public AudioProcessor
 {
 public:
     //==============================================================================
-    FfthopProcesingAudioProcessor();
-    ~FfthopProcesingAudioProcessor();
+    OverlappingFFTProcessorDemoAudioProcessor();
+    ~OverlappingFFTProcessorDemoAudioProcessor();
 
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
@@ -83,5 +83,5 @@ private:
     MyProcessor myProcessor;
 
     //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FfthopProcesingAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OverlappingFFTProcessorDemoAudioProcessor)
 };

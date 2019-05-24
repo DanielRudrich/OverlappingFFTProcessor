@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="MvRAJi" name="FftWithHopSizeAndHannWindow" projectType="audioplug"
+<JUCERPROJECT id="MvRAJi" name="OverlappingFFTProcessorDemo" projectType="audioplug"
               jucerVersion="5.4.3" version="1.1.0" companyName="Daniel Rudrich"
               companyCopyright="Daniel Rudrich" companyEmail="mail@danielrudrich.de"
-              pluginName="FftWithHopSizeAndHannWindow" pluginManufacturer="Daniel Rudrich"
+              pluginName="OverlappingFFTProcessorDemo" pluginManufacturer="Daniel Rudrich"
               pluginFormats="buildStandalone,buildVST">
-  <MAINGROUP id="IR3RkR" name="FftWithHopSizeAndHannWindow">
+  <MAINGROUP id="IR3RkR" name="OverlappingFFTProcessorDemo">
     <GROUP id="{6FD2ECFC-2707-CD88-B59E-987BC24F076B}" name="Source">
-      <FILE id="XQyZSZ" name="fftWithHopSizeAndHannWindowProcessor.h" compile="0"
-            resource="0" file="Source/fftWithHopSizeAndHannWindowProcessor.h"/>
+      <FILE id="mAlZ3Y" name="OverlappingFFTProcessor.h" compile="0" resource="0"
+            file="Source/OverlappingFFTProcessor.h"/>
       <FILE id="RW6aHU" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="gDncNl" name="PluginProcessor.h" compile="0" resource="0"
@@ -21,8 +21,8 @@
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="FftWithHopSizeAndHannWindow"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="FftWithHopSizeAndHannWindow"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="OverlappingFFTProcessorDemo"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="OverlappingFFTProcessorDemo"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_core" path="../../../../../Applications/JUCE/modules"/>

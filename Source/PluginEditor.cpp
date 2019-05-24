@@ -12,7 +12,7 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-FfthopProcesingAudioProcessorEditor::FfthopProcesingAudioProcessorEditor (FfthopProcesingAudioProcessor& p)
+OverlappingFFTProcessorDemoAudioProcessorEditor::OverlappingFFTProcessorDemoAudioProcessorEditor (OverlappingFFTProcessorDemoAudioProcessor& p)
     : AudioProcessorEditor (&p), processor (p)
 {
     // Make sure that before the constructor has finished, you've set the
@@ -21,22 +21,22 @@ FfthopProcesingAudioProcessorEditor::FfthopProcesingAudioProcessorEditor (Ffthop
 
 }
 
-FfthopProcesingAudioProcessorEditor::~FfthopProcesingAudioProcessorEditor()
+OverlappingFFTProcessorDemoAudioProcessorEditor::~OverlappingFFTProcessorDemoAudioProcessorEditor()
 {
 }
 
 //==============================================================================
-void FfthopProcesingAudioProcessorEditor::paint (Graphics& g)
+void OverlappingFFTProcessorDemoAudioProcessorEditor::paint (Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
 
     g.setColour (Colours::white);
     g.setFont (15.0f);
-    g.drawFittedText ("Hello World!", getLocalBounds(), Justification::centred, 1);
+    g.drawFittedText ("OverlappingFFTProcessorDemo", getLocalBounds(), Justification::centred, 1);
 }
 
-void FfthopProcesingAudioProcessorEditor::resized()
+void OverlappingFFTProcessorDemoAudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..

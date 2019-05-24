@@ -16,11 +16,11 @@
 //==============================================================================
 /**
 */
-class FfthopProcesingAudioProcessorEditor  : public AudioProcessorEditor
+class OverlappingFFTProcessorDemoAudioProcessorEditor  : public AudioProcessorEditor
 {
 public:
-    FfthopProcesingAudioProcessorEditor (FfthopProcesingAudioProcessor&);
-    ~FfthopProcesingAudioProcessorEditor();
+    OverlappingFFTProcessorDemoAudioProcessorEditor (OverlappingFFTProcessorDemoAudioProcessor&);
+    ~OverlappingFFTProcessorDemoAudioProcessorEditor();
 
     //==============================================================================
     void paint (Graphics&) override;
@@ -29,7 +29,7 @@ public:
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
-    FfthopProcesingAudioProcessor& processor;
+    OverlappingFFTProcessorDemoAudioProcessor& processor;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FfthopProcesingAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OverlappingFFTProcessorDemoAudioProcessorEditor)
 };
