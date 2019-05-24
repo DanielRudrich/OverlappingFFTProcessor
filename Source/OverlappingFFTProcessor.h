@@ -22,7 +22,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 
 /**
- This processor takes care about buffering input and output samples for your FFT processing.
+ This processor takes care of buffering input and output samples for your FFT processing.
  With fttSizeAsPowerOf2 and hopSizeDividerAsPowerOf2 the fftSize and hopSize can be specifiec.
  Inherit from this class and override the processFrameInBuffer() function in order to
  implement your processing. You can also override the `createWindow()` method to use
