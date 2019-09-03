@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="MvRAJi" name="OverlappingFFTProcessorDemo" projectType="audioplug"
-              jucerVersion="5.4.3" version="1.1.0" companyName="Daniel Rudrich"
+              jucerVersion="5.4.4" version="1.1.1" companyName="Daniel Rudrich"
               companyCopyright="Daniel Rudrich" companyEmail="mail@danielrudrich.de"
               pluginName="OverlappingFFTProcessorDemo" pluginManufacturer="Daniel Rudrich"
               pluginFormats="buildStandalone,buildVST">

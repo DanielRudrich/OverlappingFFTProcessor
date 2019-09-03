@@ -18,6 +18,11 @@
  ==============================================================================
  */
 
+/* Changelog
+ 2019-09-03
+    - compatibility to JUCE 5.4.4
+ */
+
 #pragma once
 #include "../JuceLibraryCode/JuceHeader.h"
 
@@ -110,16 +115,19 @@ public:
         notYetUsedAudioDataCount = 0;
     }
 
-    void process (const dsp::ProcessContextReplacing<float> &context)
+
+    void process (const dsp::ProcessContextReplacing<float>& context)
     {
-        dsp::ProcessContextNonReplacing<float> replacingContext (context.getInputBlock(), context.getOutputBlock());
-        process (replacingContext);
+        process (context.getInputBlock(), context.getOutputBlock());
     }
 
-    void process (dsp::ProcessContextNonReplacing<float> context)
+    void process (const dsp::ProcessContextNonReplacing<float>& context)
     {
-        dsp::AudioBlock<float> inputBlock = context.getInputBlock();
-        dsp::AudioBlock<float> outputBlock = context.getOutputBlock();
+        process (context.getInputBlock(), context.getOutputBlock());
+    }
+
+    void process (const dsp::AudioBlock<const float>& inputBlock, dsp::AudioBlock<float>& outputBlock)
+    {
         const auto L = (int) inputBlock.getNumSamples();
         const auto numChIn = jmin (static_cast<int> (inputBlock.getNumChannels()), nChIn);
         const auto numChOut = jmin (static_cast<int> (outputBlock.getNumChannels()), nChOut);
